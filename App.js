@@ -1,14 +1,16 @@
 import * as Location from 'expo-location';
 import { useEffect, useState } from 'react';
-import { ScrollView, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Dimensions, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const API_KEY = "d0c220376e2679a4570d675bb9f9edb9";
 
 export default function App() {
-  const [city, setCity] = useState("Loading...")
-  const [location, setLocation] = useState();
+  const [city, setCity] = useState("Loading...");
+  const [days, setDays] = useState([]);
   const [ok, setOk] = useState(true);
-  const ask = async () => {
+
+  const getWeather = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
     if (!granted) {
       setOk(false);
@@ -19,9 +21,13 @@ export default function App() {
       { useGoogleMaps: false }
     );
     setCity(location[0].city);
+    const response = await fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=alerts&appid=${API_KEY}`);
+    const json = await response.json();
+    // setDays(json.daily)
   };
+
   useEffect(() => {
-    ask();
+    getWeather();
   }, [])
   return (
     <View style={styles.container}>
@@ -34,18 +40,13 @@ export default function App() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.weather}
       >
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>sunny</Text>
-        </View>
+        {days.length === 0 ?
+          <View style={styles.day}>
+            <ActivityIndicator color="white" sttyle={{ marginTop: 10 }} size="large" />
+          </View>
+          :
+          <View style={styles.day}>
+          </View>}
       </ScrollView>
     </View>
   );
