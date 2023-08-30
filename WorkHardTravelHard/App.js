@@ -13,21 +13,43 @@ export default function App() {
   const [toDos, setToDos] = useState({});
 
   useEffect(() => {
-    loadToDos()
+    loadToDos();
   }, [])
 
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
-  const onChangeText = (payload) => setText(payload);
-  const saveToDos = async (toSave) => {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave))
+  useEffect(() => {
+    loadWorking();
+  }, [working])
+
+  const travel = () => {
+    setWorking(false);
+    AsyncStorage.setItem("currentWorkState", "false");
   }
+  const work = () => {
+    setWorking(true);
+    AsyncStorage.setItem("currentWorkState", "true");
+  }
+
+  const onChangeText = (payload) => setText(payload);
+
+  const saveToDos = async (toSave) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  }
+
   const loadToDos = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY);
       setToDos(JSON.parse(s));
     } catch (error) {
+      console.log(error)
+    }
+  }
 
+  const loadWorking = async () => {
+    try {
+      const workingState = await AsyncStorage.getItem("currentWorkState");
+      setWorking(workingState === "true");
+    } catch (error) {
+      console.log(error)
     }
   }
 
@@ -57,6 +79,7 @@ export default function App() {
       },
     ])
   }
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
