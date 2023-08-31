@@ -4,6 +4,7 @@ import { theme } from './color';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Fontisto } from '@expo/vector-icons';
+import { Octicons } from '@expo/vector-icons';
 
 const STORAGE_KEY = "@toDos"
 
@@ -12,6 +13,8 @@ export default function App() {
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
   const [checked, setChecked] = useState(false);
+  const [modify, setModify] = useState(false);
+  const [modifyInput, setModifyInput] = useState("");
 
   useEffect(() => {
     loadToDos();
@@ -88,6 +91,19 @@ export default function App() {
     setToDos(newToDos);
   }
 
+  const modifyToDo = async (key) => {
+    try {
+      const newToDos = { ...toDos }
+      newToDos[key] = { text: modifyInput, working, checked }
+      setToDos(newToDos);
+      await saveToDos(newToDos);
+      setModify(false)
+    } catch (error) {
+      console.log(error)
+    }
+
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -113,10 +129,23 @@ export default function App() {
             toDos[key].working === working ?
               (
                 <View style={styles.toDo} key={key}>
-                  <Text style={{ ...styles.toDoText, textDecorationLine: checked && "line-through" }}>{toDos[key].text}</Text>
+                  {
+                    modify ?
+                      <TextInput
+                        onSubmitEditing={() => modifyToDo(key)}
+                        onChangeText={(payload) => setModifyInput(payload)}
+                        returnKeyType="done"
+                        value={modifyInput}
+                        style={styles.modifyInput}
+                      /> :
+                      <Text style={{ ...styles.toDoText, textDecorationLine: checked && "line-through" }}>{toDos[key].text}</Text>
+                  }
                   <View style={styles.icons}>
                     <TouchableOpacity style={styles.icon} onPress={() => completeToDo(key)}>
                       <Fontisto name="check" size={18} color={theme.grey} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.icon} onPress={() => setModify(true)}>
+                      <Octicons name="pencil" size={24} color={theme.grey} />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.icon} onPress={() => deleteToDo(key)}>
                       <Fontisto name="trash" size={18} color={theme.grey} />
@@ -162,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   toDoText: {
     color: "white",
@@ -174,6 +203,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between"
   },
   icon: {
-    marginLeft: 12,
+    marginLeft: 16,
+  },
+  modifyInput: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    fontSize: 16,
   }
 });
