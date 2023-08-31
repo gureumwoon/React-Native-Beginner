@@ -11,6 +11,7 @@ export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     loadToDos();
@@ -80,6 +81,13 @@ export default function App() {
     ])
   }
 
+  const completeToDo = (key) => {
+    setChecked(!checked);
+    const updateToDos = { ...toDos[key], text: toDos[key].text, working, checked };
+    const newToDos = { ...toDos, [key]: updateToDos }
+    setToDos(newToDos);
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -105,10 +113,15 @@ export default function App() {
             toDos[key].working === working ?
               (
                 <View style={styles.toDo} key={key}>
-                  <Text style={styles.toDoText}>{toDos[key].text}</Text>
-                  <TouchableOpacity onPress={() => deleteToDo(key)}>
-                    <Fontisto name="trash" size={18} color={theme.grey} />
-                  </TouchableOpacity>
+                  <Text style={{ ...styles.toDoText, textDecorationLine: checked && "line-through" }}>{toDos[key].text}</Text>
+                  <View style={styles.icons}>
+                    <TouchableOpacity style={styles.icon} onPress={() => completeToDo(key)}>
+                      <Fontisto name="check" size={18} color={theme.grey} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.icon} onPress={() => deleteToDo(key)}>
+                      <Fontisto name="trash" size={18} color={theme.grey} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ) : null
           )}
@@ -155,5 +168,12 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "500",
+  },
+  icons: {
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  icon: {
+    marginLeft: 12,
   }
 });
