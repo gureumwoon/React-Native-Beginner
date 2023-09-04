@@ -15,6 +15,7 @@ export default function App() {
   const [checked, setChecked] = useState(false);
   const [modify, setModify] = useState(false);
   const [modifyInput, setModifyInput] = useState("");
+  const [progressBarWidth, setProgressBarWidth] = useState(0);
 
   useEffect(() => {
     loadToDos();
@@ -84,11 +85,15 @@ export default function App() {
     ])
   }
 
-  const completeToDo = (key) => {
+  const completeToDo = async (key) => {
     setChecked(!checked);
-    const updateToDos = { ...toDos[key], text: toDos[key].text, working, checked };
-    const newToDos = { ...toDos, [key]: updateToDos }
+    const newToDos = { ...toDos };
+    newToDos[key].checked = !newToDos[key].checked;
     setToDos(newToDos);
+    await saveToDos(newToDos)
+
+    const calculateBar = calculateProgressBar();
+    setProgressBarWidth(calculateBar);
   }
 
   const modifyToDo = async (key) => {
@@ -104,6 +109,21 @@ export default function App() {
 
   }
 
+  // checked가 true인 투두 갯수
+  const countCheckedTodo = () => {
+    const todoArray = Object.values(toDos);
+    return todoArray.filter((todo) => todo.checked).length;
+  }
+
+  // progress bar 길이 계산
+  const calculateProgressBar = () => {
+    const checkedTodo = countCheckedTodo();
+    const totalCount = Object.keys(toDos).length;
+
+    const widthRatio = totalCount === 0 ? 0 : checkedTodo / totalCount;
+    return widthRatio;
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -114,6 +134,9 @@ export default function App() {
         <TouchableOpacity onPress={travel}>
           <Text style={{ ...styles.btnText, color: !working ? "white" : theme.grey }}>Travel</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.barContainer}>
+        <View style={{ ...styles.bar, flex: progressBarWidth }}></View>
       </View>
       <TextInput
         onSubmitEditing={addToDo}
@@ -138,7 +161,7 @@ export default function App() {
                         value={modifyInput}
                         style={styles.modifyInput}
                       /> :
-                      <Text style={{ ...styles.toDoText, textDecorationLine: checked && "line-through" }}>{toDos[key].text}</Text>
+                      <Text style={{ ...styles.toDoText, textDecorationLine: toDos[key].checked === true ? "line-through" : "none" }}>{toDos[key].text}</Text>
                   }
                   <View style={styles.icons}>
                     <TouchableOpacity style={styles.icon} onPress={() => completeToDo(key)}>
@@ -212,5 +235,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 10,
     fontSize: 16,
+  },
+  barContainer: {
+    flexDirection: "row",
+    height: 20,
+    backgroundColor: theme.toDoBg,
+    borderRadius: 5,
+    marginTop: 20,
+    marginBottom: 5,
+  },
+  bar: {
+    height: 20,
+    backgroundColor: "#fcba03",
+    borderRadius: 5,
   }
 });
