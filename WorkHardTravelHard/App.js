@@ -16,14 +16,21 @@ export default function App() {
   const [modify, setModify] = useState(false);
   const [modifyInput, setModifyInput] = useState("");
   const [progressBarWidth, setProgressBarWidth] = useState(0);
+  const [travelprogressBarWidth, setTravelProgressBarWidth] = useState(0);
 
   useEffect(() => {
     loadToDos();
   }, [])
 
   useEffect(() => {
+    loadProgressWidth();
+    loadTravelProgressWidth();
+  }, [])
+
+  useEffect(() => {
     loadWorking();
   }, [working])
+
 
   const travel = () => {
     setWorking(false);
@@ -55,6 +62,42 @@ export default function App() {
       setWorking(workingState === "true");
     } catch (error) {
       console.log(error)
+    }
+  }
+
+  const saveTravelProgressWidth = async (toSave) => {
+    const progressString = toSave.toString()
+    try {
+      await AsyncStorage.setItem("travelProgress", progressString);
+    } catch (error) {
+
+    }
+  }
+
+  const loadTravelProgressWidth = async () => {
+    try {
+      const savedTravelProgressWidth = await AsyncStorage.getItem("travelProgress");
+      setTravelProgressBarWidth(parseFloat(savedTravelProgressWidth));
+    } catch (error) {
+
+    }
+  }
+
+  const saveWorkProgressWidth = async (toSave) => {
+    try {
+      const progressString = toSave.toString();
+      await AsyncStorage.setItem("workProgress", progressString);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const loadProgressWidth = async () => {
+    try {
+      const savedWidth = await AsyncStorage.getItem("workProgress");
+      setProgressBarWidth(parseFloat(savedWidth));
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -92,8 +135,15 @@ export default function App() {
     setToDos(newToDos);
     await saveToDos(newToDos)
 
-    const calculateBar = calculateProgressBar();
-    setProgressBarWidth(calculateBar);
+    if (toDos[key].working) {
+      const calculateBar = calculateProgressBar("Work");
+      setProgressBarWidth(calculateBar);
+      await saveWorkProgressWidth(calculateBar)
+    } else {
+      const calculateBar = calculateProgressBar("Travel");
+      setTravelProgressBarWidth(calculateBar);
+      await saveTravelProgressWidth(calculateBar)
+    }
   }
 
   const modifyToDo = async (key) => {
@@ -116,11 +166,18 @@ export default function App() {
   }
 
   // progress bar 길이 계산
-  const calculateProgressBar = () => {
+  const calculateProgressBar = (screen) => {
     const checkedTodo = countCheckedTodo();
     const totalCount = Object.keys(toDos).length;
 
-    const widthRatio = totalCount === 0 ? 0 : checkedTodo / totalCount;
+    let widthRatio = 0;
+
+    widthRatio = totalCount === 0 ? 0 : checkedTodo / totalCount;
+
+    if (screen === "Travel") {
+      const travleCheckedTodo = Object.values(toDos).filter((todo) => todo.working === false && todo.checked).length;
+      widthRatio = travleCheckedTodo / totalCount;
+    }
     return widthRatio;
   }
 
@@ -135,9 +192,24 @@ export default function App() {
           <Text style={{ ...styles.btnText, color: !working ? "white" : theme.grey }}>Travel</Text>
         </TouchableOpacity>
       </View>
-      <View style={styles.barContainer}>
-        <View style={{ ...styles.bar, flex: progressBarWidth }}></View>
+      <View style={styles.barTextContainer}>
+        <Text style={styles.barText}>0</Text>
+        <Text style={styles.barText}>100</Text>
       </View>
+      {
+        working ?
+          (
+            <View style={styles.barContainer}>
+              <View style={{ ...styles.bar, flex: progressBarWidth }}></View>
+            </View>
+          ) :
+          (
+            <View style={styles.barContainer}>
+              <View style={{ ...styles.bar, flex: travelprogressBarWidth }}></View>
+            </View>
+          )
+      }
+
       <TextInput
         onSubmitEditing={addToDo}
         onChangeText={onChangeText}
@@ -248,5 +320,14 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: "#fcba03",
     borderRadius: 5,
+  },
+  barTextContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: -15,
+    marginTop: 10
+  },
+  barText: {
+    color: theme.toDoBg,
   }
 });
