@@ -50,7 +50,9 @@ export default function App() {
   const loadToDos = async () => {
     try {
       const s = await AsyncStorage.getItem(STORAGE_KEY);
-      setToDos(JSON.parse(s));
+      if (s) {
+        setToDos(JSON.parse(s));
+      }
     } catch (error) {
       console.log(error)
     }
@@ -77,7 +79,9 @@ export default function App() {
   const loadTravelProgressWidth = async () => {
     try {
       const savedTravelProgressWidth = await AsyncStorage.getItem("travelProgress");
-      setTravelProgressBarWidth(parseFloat(savedTravelProgressWidth));
+      if (saveTravelProgressWidth) {
+        setTravelProgressBarWidth(parseFloat(savedTravelProgressWidth));
+      }
     } catch (error) {
 
     }
@@ -95,7 +99,9 @@ export default function App() {
   const loadProgressWidth = async () => {
     try {
       const savedWidth = await AsyncStorage.getItem("workProgress");
-      setProgressBarWidth(parseFloat(savedWidth));
+      if (savedWidth) {
+        setProgressBarWidth(parseFloat(savedWidth));
+      }
     } catch (error) {
       console.log(error);
     }
